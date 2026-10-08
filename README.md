@@ -138,8 +138,6 @@ et IP d'origine.
 .
 ├── README.md
 ├── screenshots/
-├── configs/        # exports de config (sans données sensibles)
-└── docs/           # notes détaillées
 ```
 
 ## ⚠️ Avertissement
