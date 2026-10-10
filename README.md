@@ -122,7 +122,40 @@ et IP d'origine.
 
 ## 🧩 Difficultés rencontrées
 
-*(à compléter au fil du lab)*
+### 1. `wazuh-logtest` ne décode pas les logs pfSense
+- **Symptôme** : `No decoder matched` dès la Phase 2, alors que les logs arrivaient bien.
+- **Cause** : pfSense envoie ses logs sans nom de machine (`Oct 9 12:04:40 filterlog[34111]: ...`). Wazuh prenait `filterlog[34111]:` pour le hostname, ne trouvait donc pas de `program_name`, et le décodeur intégré `pf` ne se déclenchait jamais. De plus, `wazuh-logtest` ne retire pas le préfixe de priorité `<134>`, contrairement à une vraie réception syslog.
+- **Solution** : coller dans `wazuh-logtest` la ligne telle que Wazuh la reçoit (sans `<134>`), et écrire un décodeur personnalisé qui reconnaît le log par sa structure (champs séparés par des virgules, `block`/`pass`) plutôt que par l'en-tête.
+
+### 2. Règles personnalisées qui ne se déclenchaient pas
+- **Symptôme** : seule la règle intégrée 87701 apparaissait, jamais les règles 1001xx.
+- **Cause** : mes règles dépendaient d'un décodeur personnalisé qui n'était pas celui utilisé, et testaient un champ `fw_action` qui n'existe pas dans la sortie du décodeur.
+- **Solution** : accrocher les règles au bon décodeur et utiliser les champs réellement extraits (visibles en Phase 2 du logtest).
+
+### 3. `wazuh-manager` refusait de démarrer
+Trois causes différentes, trouvées avec `grep -iE "error|critical" /var/ossec/logs/ossec.log` :
+- **Deux blocs `<group>`** collés dans `local_rules.xml` (reste de l'ancien fichier) : XML invalide.
+- **`<field name="action">`** : `action` est un champ « statique » dans Wazuh (comme `srcip`, `dstip`, `protocol`...). Il se teste avec sa propre balise `<action>`. Erreur : `Field 'action' is static`.
+- **`<type>pcre2</type>`** dans un décodeur : le moteur de regex se choisit par un attribut, `<regex type="pcre2">`. `xmllint` ne détecte pas ce genre d'erreur, car il ne vérifie que la syntaxe XML, pas les règles de Wazuh.
+
+### 4. `xmllint` signalait une erreur sur le fichier de décodeurs
+- **Symptôme** : `Extra content at the end of the document`.
+- **Cause** : un fichier de décodeurs contient plusieurs `<decoder>` sans élément racine commun, ce qu'un XML classique n'accepte pas. Ce n'est pas une vraie erreur.
+- **Solution** : vérifier en entourant temporairement le fichier d'une racine :
+  `(echo "<root>"; sudo cat local_decoder.xml; echo "</root>") | xmllint --noout -`
+
+### 5. Impossible de joindre la DMZ depuis Kali
+- **Symptôme** : ni ping ni HTTP vers `192.168.2.10`, alors que les règles pfSense étaient correctes et qu'aucune ligne de blocage n'apparaissait dans les logs.
+- **Cause** : `ip route get 192.168.2.10` renvoyait `dev kali table 51820`. Un VPN WireGuard actif sur Kali captait tout le trafic, y compris celui destiné au lab. Les paquets n'atteignaient jamais pfSense.
+- **Solution** : désactiver le VPN pendant le lab (ou ajouter une route statique plus précise `192.168.2.0/24 via 192.168.1.1`). Le traceroute montre ensuite le passage par pfSense.
+
+### 6. Logs Suricata non décodés dans `wazuh-logtest`
+- **Symptôme** : `No decoder matched`, avec une Phase 1 vide.
+- **Cause** : la ligne de test était incomplète (sans date ni hostname), donc Wazuh ne voyait pas `program_name = suricata`.
+- **Solution** : tester avec une ligne complète copiée depuis les vrais logs (`/var/log/syslog` ou `journalctl`).
+
+### Limite connue
+L'agent Wazuh de la Debian DMZ tente de joindre le serveur Wazuh sur le port 1514, mais la règle pfSense « block DMZ to LAN » l'en empêche. Une règle `Pass` TCP 1514 de `192.168.2.10` vers le serveur Wazuh, placée avant le blocage, serait nécessaire pour une remontée de logs
 
 ## 📚 Ce que j'ai appris
 
