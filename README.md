@@ -75,11 +75,20 @@ Envoi des logs pfSense par syslog (UDP 514) vers le serveur Wazuh.
 ![Config syslog pfSense](screenshots/03-pfsense-syslog.png)
 ![Logs pfSense dans Wazuh](screenshots/03b-wazuh-pfsense-logs.png)
 
-### 4. Intégration des logs Suricata
-Suricata tourne sur pfSense (FreeBSD), sans agent Wazuh possible. Les alertes sont transmises via syslog (Send Alerts to System Log sur l’interface Suricata) vers le serveur Wazuh (port 514/UDP), puis décodées par un decoder et des règles personnalisés (local_decoder.xml, local_rules.xml) adaptés au format natif des logs Suricata.
+### 4. Intégration des logs Suricata et des logs applicatifs
+Suricata tourne sur pfSense (FreeBSD), sans agent Wazuh possible. Ses alertes
+sont transmises par **syslog** (option *Send Alerts to System Log* sur
+l'interface Suricata) vers le serveur Wazuh (port 514/UDP), puis décodées par
+un **decoder et des règles personnalisés** (`local_decoder.xml`,
+`local_rules.xml`) adaptés au format natif de Suricata. En complément, l'agent
+Wazuh installé sur le serveur DMZ lit directement les logs Apache
+(`access.log`), où une règle Wazuh native détecte déjà les requêtes marquées
+par le Nmap Scripting Engine (User-Agent caractéristique), offrant une
+deuxième source de détection pour le même trafic.
 
-![Config ossec.conf](screenshots/04-wazuh-conf-suricata.png)
+![Decoder Suricata](screenshots/04-wazuh-conf-suricata.png)
 ![Alerte Suricata dans Wazuh](screenshots/04b-wazuh-suricata-alerts.png)
+![Détection Nmap dans les logs Apache](screenshots/04c-wazuh-apache-nmap.png)
 
 ### 5. Règle de détection personnalisée
 Règle locale déclenchée sur un scan détecté par Suricata ou un blocage
