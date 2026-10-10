@@ -46,7 +46,6 @@ valider la chaîne complète par un scan réel détecté et corrélé.
 | LAN | 192.168.1.0/24 | Serveur Wazuh | Manager, indexer, dashboard |
 | DMZ | 192.168.2.0/24 | Debian Server | Serveur surveillé, agent Wazuh |
 
-![Schéma réseau](screenshots/00-architecture.png)
 
 ## ⚙️ Configuration
 
