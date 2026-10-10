@@ -107,7 +107,7 @@ pfSense, corrélation dans Wazuh.
 Dashboard personnalisé regroupant les événements réseau par source, type
 et IP d'origine.
 
-![Dashboard personnalisé](screenshots/07-wazuh-dashboard-custom.png)
+![Dashboard personnalisé](screenshots/07-wazuh-dashboard.png)
 
 ## ✅ Tests et résultats
 
