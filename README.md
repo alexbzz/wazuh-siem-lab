@@ -76,8 +76,7 @@ Envoi des logs pfSense par syslog (UDP 514) vers le serveur Wazuh.
 ![Logs pfSense dans Wazuh](screenshots/03b-wazuh-pfsense-logs.png)
 
 ### 4. Intégration des logs Suricata
-Lecture du fichier `eve.json` de Suricata par l'agent Wazuh installé sur
-pfSense ou sur la machine qui héberge Suricata.
+Suricata tourne sur pfSense (FreeBSD), sans agent Wazuh possible. Les alertes sont transmises via syslog (Send Alerts to System Log sur l’interface Suricata) vers le serveur Wazuh (port 514/UDP), puis décodées par un decoder et des règles personnalisés (local_decoder.xml, local_rules.xml) adaptés au format natif des logs Suricata.
 
 ![Config ossec.conf](screenshots/04-wazuh-conf-suricata.png)
 ![Alerte Suricata dans Wazuh](screenshots/04b-wazuh-suricata-alerts.png)
